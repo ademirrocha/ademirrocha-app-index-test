@@ -1,0 +1,5 @@
+{
+    "email": "example@email.com", 
+    "password": "password",
+    "api_url": "https://acesso-a-sua-api.com/api"
+}
