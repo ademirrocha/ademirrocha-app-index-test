@@ -1,9 +1,25 @@
+
+<style>
+    .d-block{
+        display: block;
+    }
+
+    .d-none{
+        display: none;
+    }
+
+</style>
 <html>
     <button onclick="getStatistics();">Statiscs -  DLS site</button>
     <button onclick="login();">Logar no site</button>
-    <button onclick="userCounts();">Update User Counts</button>
+    <button onclick="updateCounts();">Update User Counts</button>
+    <button onclick="updateCounts('/sign/update');">Update Sign Counts</button>
+    <button onclick="updateCounts('/review/update');">Update Review Counts</button>
+    <button onclick="updateCounts('/reply/update');">Update Reply Counts</button>
 
     <div id="result_back"></div>
+    <div id="spinner"><img src="/images/spinning-loading.gif" alt="Carregando..." title="Carregando..."></div>
+
 </html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -21,6 +37,18 @@
             "Content-Type": "application/json;charset=UTF-8"
             }
     };
+
+    loading = false;
+
+    loadSpinner = () => {
+        if(loading){
+            $('#result_back').removeClass('d-block').addClass('d-none');
+            $('#spinner').removeClass('d-none').addClass('d-block');
+        }else{
+            $('#result_back').removeClass('d-none').addClass('d-block');
+            $('#spinner').removeClass('d-block').addClass('d-none');
+        }
+    }
 
     const loadJSON = (callback) => {
         var xobj = new XMLHttpRequest();
@@ -41,11 +69,19 @@
         environment = JSON.parse(response);
     });
 
-    const api = axios.create({
-        baseURL: environment.api_url
-    });
+    let api = null;
+    
+    setTimeout(() => {
+        api = axios.create({
+            baseURL: environment.api_url
+        });
+        loadSpinner();
+    }, 1000);
+   
 
     async function getStatistics(){
+        loading = true;
+        loadSpinner();
         api.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('accessToken');
         await api.get('/site/statistics', {
             config
@@ -54,16 +90,21 @@
             function(response){
             document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(response.data, null, 2) + "</pre>";
             console.log(response.data);
+            loading = false;
+            loadSpinner();
         })
         .catch(error => {
             console.log(error.response);
             document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(error.response, null, 2) + "</pre>";
+            loading = false;
+            loadSpinner();
         }); 
     }
 
     async function login(){
 
-        console.log(environment)
+        loading = true;
+        loadSpinner();
         
         await api.post('/auth/login', {
             config,
@@ -75,34 +116,44 @@
                 document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(response.data, null, 2) + "</pre>";
                 console.log(response.data);
                 localStorage.setItem('accessToken', response.data.meta.token);
+                loading = false;
+                loadSpinner();
                 
         })
         .catch(error => {
             console.log(error.response);
             document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(error.response, null, 2) + "</pre>";
+            loading = false;
+            loadSpinner();
         }); 
     }
 
     
 
 
-    async function userCounts(){
+    async function updateCounts(path = '/user/update'){
+        loading = true;
+        loadSpinner();
 
         api.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('accessToken');
-        await api.get('/counts/user/update', {
+        await api.get('/counts' + path, {
             config
         })
         .then(
             function(response){
                 document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(response.data, null, 2) + "</pre>";
                 console.log(response.data);
+                loading = false;
+                loadSpinner();
         })
         .catch(error => {
             console.log(error.response);
             document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(error.response, null, 2) + "</pre>";
+            loading = false;
+            loadSpinner();
         }); 
     }
 
-
+    
 
 </script>
