@@ -11,11 +11,13 @@
 </style>
 <html>
     <button onclick="getStatistics();">Statiscs -  DLS site</button>
-    <button onclick="login();">Logar no site</button>
+    
     <button onclick="updateCounts();">Update User Counts</button>
     <button onclick="updateCounts('/sign/update');">Update Sign Counts</button>
     <button onclick="updateCounts('/review/update');">Update Review Counts</button>
     <button onclick="updateCounts('/reply/update');">Update Reply Counts</button>
+    <button onclick="login();">Logar no site</button>
+    <button onclick="deslogar();">Deslogar do site</button>
 
     <div id="result_back"></div>
     <div id="spinner"><img src="/images/spinning-loading.gif" alt="Carregando..." title="Carregando..."></div>
@@ -101,11 +103,36 @@
         }); 
     }
 
+
+    async function updateCounts(path = '/user/update'){
+        loading = true;
+        loadSpinner();
+
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('accessToken');
+        await api.get('/counts' + path, {
+            config
+        })
+        .then(
+            function(response){
+                document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(response.data, null, 2) + "</pre>";
+                console.log(response.data);
+                loading = false;
+                loadSpinner();
+        })
+        .catch(error => {
+            console.log(error.response);
+            document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(error.response, null, 2) + "</pre>";
+            loading = false;
+            loadSpinner();
+        }); 
+    }
+
+
     async function login(){
 
         loading = true;
         loadSpinner();
-        
+
         await api.post('/auth/login', {
             config,
             user: environment.email,
@@ -128,23 +155,23 @@
         }); 
     }
 
-    
+    async function deslogar(){
 
-
-    async function updateCounts(path = '/user/update'){
         loading = true;
         loadSpinner();
 
         api.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('accessToken');
-        await api.get('/counts' + path, {
+        await api.post('/auth/logout', {
             config
-        })
+            })
         .then(
             function(response){
                 document.getElementById('result_back').innerHTML =  "<pre>" + JSON.stringify(response.data, null, 2) + "</pre>";
                 console.log(response.data);
+                localStorage.removeItem('accessToken');
                 loading = false;
                 loadSpinner();
+                
         })
         .catch(error => {
             console.log(error.response);
